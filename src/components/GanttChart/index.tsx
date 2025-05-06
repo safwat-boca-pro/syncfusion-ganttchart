@@ -27,16 +27,16 @@ import { registerLicense } from "@syncfusion/ej2-base";
 import { projectData } from "../../data";
 import { useEffect, useRef, useState } from "react";
 
-// interface Task {
-// 	TaskID: number;
-// 	TaskName: string;
-// 	StartDate: Date;
-// 	EndDate: Date;
-// 	Duration: number;
-// 	Progress: number;
-// 	Predecessor?: string;
-// 	subtasks?: Task[];
-// }
+export interface Task {
+	TaskID: number;
+	TaskName: string;
+	StartDate: Date;
+	EndDate?: Date;
+	Duration?: number;
+	Progress?: number;
+	Predecessor?: string;
+	subtasks?: Task[];
+}
 
 
 registerLicense(

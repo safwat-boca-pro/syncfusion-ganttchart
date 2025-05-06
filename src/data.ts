@@ -1,4 +1,6 @@
-export const projectData: object[] = [
+import type { Task } from "./components/GanttChart";
+
+export const projectData: Task[] = [
 	{
 		TaskID: 1,
 		TaskName: "Project Initiation",
@@ -181,5 +183,4 @@ export const projectData: object[] = [
 			},
 		],
 	},
-]; 
-
+];
