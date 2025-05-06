@@ -45,24 +45,18 @@ registerLicense(
 
 const GanttChart = () => {
 	// Track project start and end dates in state to detect boundary crossing
-	const [projectStartDate, ] = useState<Date>(new Date("2024-03-25"));
+	const [projectStartDate] = useState<Date>(new Date("2024-03-25"));
 	// If project end date is unknown, undefined allows Gantt to auto-calculate from data
-	const [projectEndDate, setProjectEndDate] = useState<Date | undefined>(undefined);
+	const [projectEndDate, setProjectEndDate] = useState<Date | undefined>(
+		undefined
+	);
 	const ganttRef = useRef<GanttComponent>(null); // optional: if you need direct API calls later
-
-	// const onTaskbarEdited = (args: any) => {
-
-	// 	const editedEnd: Date = args.data.EndDate;
-	// 	if (editedEnd > projectEndDate) {
-	// 		setProjectEndDate(editedEnd);
-	// 	}
-	// };
 
 	const onTaskbarEditing = (args: any) => {
 		// Detect when dragging crosses project start or end
 		// const draggingStart: Date = args.data.StartDate;
 		const draggingEnd: Date = args.data.EndDate;
-		
+
 		// crossed or reached start boundary
 		// if (draggingStart.getTime() <= projectStartDate.getTime()) {
 		// 	console.log('🚀 reached project start date boundary:', projectStartDate);
@@ -115,7 +109,7 @@ const GanttChart = () => {
 			// Calculate time difference in milliseconds
 			const currentEndDate = ganttRef.current.projectEndDate as Date;
 			const timeDiff = projectEndDate.getTime() - currentEndDate.getTime();
-			
+
 			// One week in milliseconds
 			const oneWeek = 7 * 24 * 60 * 60 * 1000;
 			// One month in milliseconds (approximately)
@@ -128,14 +122,10 @@ const GanttChart = () => {
 				newEndDate.setMonth(newEndDate.getMonth() + 2);
 			} else if (timeDiff >= oneWeek) {
 				// Add 2 weeks if difference is one week
-				newEndDate.setTime(newEndDate.getTime() + (2 * oneWeek));
+				newEndDate.setTime(newEndDate.getTime() + 2 * oneWeek);
 			}
 
-			ganttRef.current.updateProjectDates(
-				projectStartDate,
-				newEndDate,
-				true
-			);
+			ganttRef.current.updateProjectDates(projectStartDate, newEndDate, true);
 		}
 	}, [projectEndDate]);
 
