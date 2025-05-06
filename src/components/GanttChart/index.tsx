@@ -148,6 +148,7 @@ const GanttChart = () => {
 			undoRedoActions={["Add", "Edit", "Delete", "RowDragAndDrop", "ZoomIn"]}
 			undoRedoStepsCount={20}
 			taskbarEditing={onTaskbarEditing}
+			durationUnit="Hour"
 		>
 			<Inject
 				services={[
