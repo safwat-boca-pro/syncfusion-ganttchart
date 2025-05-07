@@ -3,6 +3,7 @@ import type { Task } from "./components/GanttChart";
 export const projectData: Task[] = [
 	{
 		TaskID: 1,
+		Resources: [1, 2],
 		TaskName: "Project Initiation",
 		StartDate: new Date("04/01/2024"),
 		subtasks: [
@@ -57,6 +58,7 @@ export const projectData: Task[] = [
 	},
 	{
 		TaskID: 8,
+		Resources: [2, 3],
 		TaskName: "Project Planning",
 		StartDate: new Date("04/16/2024"),
 		EndDate: new Date("04/30/2024"),
@@ -97,6 +99,7 @@ export const projectData: Task[] = [
 	},
 	{
 		TaskID: 13,
+		Resources: [3, 4],
 		TaskName: "Project Execution",
 		StartDate: new Date("05/01/2024"),
 		EndDate: new Date("07/18/2024"),
@@ -153,6 +156,7 @@ export const projectData: Task[] = [
 	},
 	{
 		TaskID: 20,
+		Resources: [4, 1],
 		TaskName: "Project Completion",
 		StartDate: new Date("07/18/2024"),
 		EndDate: new Date("07/28/2024"),
@@ -183,4 +187,11 @@ export const projectData: Task[] = [
 			},
 		],
 	},
+];
+
+export const projectResources = [
+	{ ResourceId: 1, ResourceName: "Alice" },
+	{ ResourceId: 2, ResourceName: "Bob" },
+	{ ResourceId: 3, ResourceName: "Charlie" },
+	{ ResourceId: 4, ResourceName: "Dana" },
 ];

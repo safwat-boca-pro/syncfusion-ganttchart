@@ -9,6 +9,9 @@ import {
 	RowDD,
 	UndoRedo,
 	type EditSettingsModel,
+	type LabelSettingsModel,
+	type ResourceFieldsModel,
+	ColumnDirective,
 } from "@syncfusion/ej2-react-gantt";
 import "@syncfusion/ej2-base/styles/material.css";
 import "@syncfusion/ej2-buttons/styles/material.css";
@@ -24,7 +27,7 @@ import "@syncfusion/ej2-grids/styles/material.css";
 import "@syncfusion/ej2-treegrid/styles/material.css";
 import "@syncfusion/ej2-react-gantt/styles/material.css";
 import { registerLicense } from "@syncfusion/ej2-base";
-import { projectData } from "../../data";
+import { projectData, projectResources } from "../../data";
 import { useEffect, useRef, useState } from "react";
 
 export interface Task {
@@ -36,8 +39,8 @@ export interface Task {
 	Progress?: number;
 	Predecessor?: string;
 	subtasks?: Task[];
+	Resources?: number[];
 }
-
 
 registerLicense(
 	"Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCeExzWmFZfVtgc19CY1ZRRmYuP1ZhSXxWdkBjX39ZdHFURGVYUUB9XUs="
@@ -68,6 +71,18 @@ const GanttChart = () => {
 		}
 	};
 
+	// Resource view settings
+	const labelSettings: LabelSettingsModel = {
+		rightLabel: "${Resources}",
+		taskLabel: "${taskData.TaskName}",
+	};
+	const resourceFields: ResourceFieldsModel = {
+		id: "ResourceId",
+		name: "ResourceName",
+		unit: "ResourceUnit",
+		group: "ResourceGroup",
+	};
+
 	const taskFields = {
 		id: "TaskID",
 		name: "TaskName",
@@ -77,8 +92,15 @@ const GanttChart = () => {
 		progress: "Progress",
 		dependency: "Predecessor",
 		child: "subtasks",
+		resourceInfo: "Resources",
 	};
 
+	const resourceSettings = {
+		dataSource: projectResources, // Your array of resource objects
+		idMapping: "ResourceId", // Field in projectResources that is the ID
+		nameMapping: "ResourceName", // Field in projectResources for display name
+		// unitMapping: 'ResourceUnit' // Optional: if you have units for resources (e.g. percentage allocation)
+	};
 	const editSettings: EditSettingsModel = {
 		allowAdding: true,
 		allowEditing: true,
@@ -141,6 +163,9 @@ const GanttChart = () => {
 			toolbar={toolbarOptions}
 			projectStartDate={projectStartDate}
 			{...(projectEndDate !== undefined ? { projectEndDate } : {})}
+			labelSettings={labelSettings}
+			resourceFields={resourceFields}
+			resources={projectResources}
 			enableAdaptiveUI={true}
 			allowFiltering={true}
 			allowRowDragAndDrop={true}
@@ -150,6 +175,14 @@ const GanttChart = () => {
 			taskbarEditing={onTaskbarEditing}
 			durationUnit="Hour"
 		>
+			{/* <ColumnDirective field="ResourceId" headerText="ID" />
+			<ColumnDirective field="ResourceName" headerText="Resource Name" /> */}
+
+			<ColumnDirective
+				field="Resources"
+				headerText="Resources"
+				// template={template}
+			/>
 			<Inject
 				services={[
 					RowDD,
