@@ -1,0 +1,255 @@
+{
+	"projects": [
+		{
+			"taskId": 1,
+			"taskName": "Project Initiation",
+			"startDate": "2024-04-01T00:00:00.000Z",
+			"isParent": true,
+			"parentID": null,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 8,
+			"taskName": "Project Planning",
+			"startDate": "2024-04-16T00:00:00.000Z",
+			"endDate": "2024-04-30T00:00:00.000Z",
+			"isParent": true,
+			"parentID": null,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 13,
+			"taskName": "Project Execution",
+			"startDate": "2024-05-01T00:00:00.000Z",
+			"endDate": "2024-07-18T00:00:00.000Z",
+			"isParent": true,
+			"parentID": null,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 20,
+			"taskName": "Project Completion",
+			"startDate": "2024-07-18T00:00:00.000Z",
+			"endDate": "2024-07-28T00:00:00.000Z",
+			"isParent": true,
+			"parentID": null,
+			"IsExpanded": false
+		}
+	],
+	"subtasks": [
+		{
+			"taskId": 2,
+			"parentID": 1,
+			"taskName": "Identify Site location",
+			"startDate": "2024-04-01T00:00:00.000Z",
+			"duration": 9,
+			"progress": 50,
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 3,
+			"parentID": 1,
+			"taskName": "Perform Soil test",
+			"startDate": "2024-04-10T00:00:00.000Z",
+			"duration": 5,
+			"progress": 10,
+			"predecessor": "2",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 4,
+			"parentID": 1,
+			"taskName": "Soil test report",
+			"startDate": "2024-04-15T00:00:00.000Z",
+			"duration": 5,
+			"progress": 4,
+			"predecessor": "3",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 5,
+			"parentID": 1,
+			"taskName": "Develop floor plan",
+			"startDate": "2024-04-08T00:00:00.000Z",
+			"duration": 10,
+			"progress": 81,
+			"predecessor": "4",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 6,
+			"parentID": 1,
+			"taskName": "List materials",
+			"startDate": "2024-04-11T00:00:00.000Z",
+			"duration": 5,
+			"progress": 100,
+			"predecessor": "5",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 7,
+			"parentID": 1,
+			"taskName": "Estimation approval",
+			"startDate": "2024-04-16T00:00:00.000Z",
+			"duration": 10,
+			"progress": 63,
+			"predecessor": "6",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 9,
+			"parentID": 8,
+			"taskName": "Site Preparation",
+			"startDate": "2024-04-16T00:00:00.000Z",
+			"duration": 5,
+			"progress": 100,
+			"predecessor": "7",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 10,
+			"parentID": 8,
+			"taskName": "Material Procurement",
+			"startDate": "2024-04-23T00:00:00.000Z",
+			"duration": 4,
+			"progress": 60,
+			"predecessor": "9",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 11,
+			"parentID": 8,
+			"taskName": "Allocate resources",
+			"startDate": "2024-04-23T00:00:00.000Z",
+			"duration": 4,
+			"progress": 75,
+			"predecessor": "9",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 12,
+			"parentID": 8,
+			"taskName": "Identify potential risks",
+			"startDate": "2024-04-29T00:00:00.000Z",
+			"duration": 2,
+			"progress": 30,
+			"predecessor": "11",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 14,
+			"parentID": 13,
+			"taskName": "Foundation work",
+			"startDate": "2024-05-01T00:00:00.000Z",
+			"duration": 10,
+			"progress": 50,
+			"predecessor": "12",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 15,
+			"parentID": 13,
+			"taskName": "Framing and roofing",
+			"startDate": "2024-05-15T00:00:00.000Z",
+			"duration": 10,
+			"progress": 50,
+			"predecessor": "14",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 16,
+			"parentID": 13,
+			"taskName": "Exterior finishing",
+			"startDate": "2024-05-29T00:00:00.000Z",
+			"duration": 8,
+			"progress": 50,
+			"predecessor": "15",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 17,
+			"parentID": 13,
+			"taskName": "Interior plumbing and electrical",
+			"startDate": "2024-06-10T00:00:00.000Z",
+			"duration": 10,
+			"progress": 50,
+			"predecessor": "16",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 18,
+			"parentID": 13,
+			"taskName": "Insulation and drywall",
+			"startDate": "2024-06-24T00:00:00.000Z",
+			"duration": 10,
+			"progress": 50,
+			"predecessor": "17",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 19,
+			"parentID": 13,
+			"taskName": "Interior finishing",
+			"startDate": "2024-07-08T00:00:00.000Z",
+			"duration": 8,
+			"progress": 50,
+			"predecessor": "18",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 21,
+			"parentID": 20,
+			"taskName": "Final inspection",
+			"startDate": "2024-07-18T00:00:00.000Z",
+			"duration": 5,
+			"progress": 0,
+			"predecessor": "19",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 22,
+			"parentID": 20,
+			"taskName": "Cleanup and site restoration",
+			"startDate": "2024-07-25T00:00:00.000Z",
+			"duration": 3,
+			"progress": 0,
+			"predecessor": "21",
+			"isParent": false,
+			"IsExpanded": false
+		},
+		{
+			"taskId": 23,
+			"parentID": 20,
+			"taskName": "Project handover",
+			"startDate": "2024-07-28T00:00:00.000Z",
+			"duration": 0,
+			"progress": 20,
+			"predecessor": "22",
+			"isParent": false,
+			"IsExpanded": false
+		}
+	],
+	"resources": [
+		{ "ResourceId": 1, "ResourceName": "Alice" },
+		{ "ResourceId": 2, "ResourceName": "Bob" },
+		{ "ResourceId": 3, "ResourceName": "Charlie" },
+		{ "ResourceId": 4, "ResourceName": "Dana" }
+	]
+}

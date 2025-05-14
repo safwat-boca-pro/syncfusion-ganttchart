@@ -27,9 +27,8 @@ import "@syncfusion/ej2-grids/styles/material.css";
 import "@syncfusion/ej2-treegrid/styles/material.css";
 import "@syncfusion/ej2-react-gantt/styles/material.css";
 import { registerLicense } from "@syncfusion/ej2-base";
-import { projectData, projectResources } from "../../data";
 import { useEffect, useRef, useState } from "react";
-
+import { projectData, projectResources } from "../../data";
 export interface Task {
 	TaskID: number;
 	TaskName: string;
@@ -40,6 +39,14 @@ export interface Task {
 	Predecessor?: string;
 	subtasks?: Task[];
 	Resources?: number[];
+	ParentId?: number;
+}
+
+export interface Resource {
+	ResourceId: number;
+	ResourceName: string;
+	ResourceUnit?: string;
+	ResourceGroup?: string;
 }
 
 registerLicense(
@@ -47,35 +54,77 @@ registerLicense(
 );
 
 const GanttChart = () => {
-	// Track project start and end dates in state to detect boundary crossing
 	const [projectStartDate] = useState<Date>(new Date("2024-03-25"));
-	// If project end date is unknown, undefined allows Gantt to auto-calculate from data
 	const [projectEndDate, setProjectEndDate] = useState<Date | undefined>(
 		undefined
 	);
-	const ganttRef = useRef<GanttComponent>(null); // optional: if you need direct API calls later
+	const ganttRef = useRef<GanttComponent | null>(null);
+
+	const [ganttData, setGanttData] = useState<Task[]>([]);
+	const [ganttResources, setGanttResources] = useState<Resource[]>([]);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchInitialProjects = async () => {
+			setIsLoading(true);
+			setError(null);
+			try {
+				const projectsRes = await fetch("http://localhost:3000/projects");
+
+				if (!projectsRes.ok) {
+					throw new Error("Failed to fetch initial project data.");
+				}
+
+				const projects: Task[] = await projectsRes.json();
+
+				const processedProjects = projects.map(proj => ({
+					...proj,
+					StartDate: new Date(proj.StartDate),
+					EndDate: proj.EndDate ? new Date(proj.EndDate) : undefined,
+					subtasks: [],
+				}));
+
+				setGanttData(processedProjects);
+			} catch (err) {
+				if (err instanceof Error) {
+					setError(err.message);
+				} else {
+					setError("An unknown error occurred during initial project load");
+				}
+				console.error("Error fetching initial project data:", err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchInitialProjects();
+	}, []);
+
+	useEffect(() => {
+		// if (ganttRef.current && ganttData.length > 0 && !isLoading) {
+		// 	ganttRef.current.collapseAll();
+		// }
+	}, [ganttData, isLoading]);
 
 	const onTaskbarEditing = (args: any) => {
-		// Detect when dragging crosses project start or end
-		// const draggingStart: Date = args.data.StartDate;
 		const draggingEnd: Date = args.data.EndDate;
-
-		// crossed or reached start boundary
-		// if (draggingStart.getTime() <= projectStartDate.getTime()) {
-		// 	console.log('🚀 reached project start date boundary:', projectStartDate);
-		// }
-		// crossed or reached end boundary
 		if (!projectEndDate || draggingEnd > projectEndDate) {
-			// extend end if undefined or dragged beyond current end
 			setProjectEndDate(draggingEnd);
 		}
 	};
 
-	// Resource view settings
+	const handleExpanding = (args: any) => {
+		if (args.data) {
+			console.log("Project expanded:", args.data as Task);
+		}
+	};
+
 	const labelSettings: LabelSettingsModel = {
 		rightLabel: "${Resources}",
 		taskLabel: "${taskData.TaskName}",
 	};
+
 	const resourceFields: ResourceFieldsModel = {
 		id: "ResourceId",
 		name: "ResourceName",
@@ -95,12 +144,6 @@ const GanttChart = () => {
 		resourceInfo: "Resources",
 	};
 
-	const resourceSettings = {
-		dataSource: projectResources, // Your array of resource objects
-		idMapping: "ResourceId", // Field in projectResources that is the ID
-		nameMapping: "ResourceName", // Field in projectResources for display name
-		// unitMapping: 'ResourceUnit' // Optional: if you have units for resources (e.g. percentage allocation)
-	};
 	const editSettings: EditSettingsModel = {
 		allowAdding: true,
 		allowEditing: true,
@@ -130,6 +173,8 @@ const GanttChart = () => {
 		if (ganttRef.current && projectEndDate) {
 			// Calculate time difference in milliseconds
 			const currentEndDate = ganttRef.current.projectEndDate as Date;
+			if (!currentEndDate) return;
+
 			const timeDiff = projectEndDate.getTime() - currentEndDate.getTime();
 
 			// One week in milliseconds
@@ -147,17 +192,37 @@ const GanttChart = () => {
 				newEndDate.setTime(newEndDate.getTime() + 2 * oneWeek);
 			}
 
-			ganttRef.current.updateProjectDates(projectStartDate, newEndDate, true);
+			if (
+				newEndDate.getTime() !==
+				(ganttRef.current.projectEndDate as Date)?.getTime()
+			) {
+				ganttRef.current.updateProjectDates(projectStartDate, newEndDate, true);
+			}
 		}
-	}, [projectEndDate]);
+	}, [projectEndDate, projectStartDate]);
+
+	// if (isLoading) {
+	// 	return <div>Loading Gantt chart data...</div>;
+	// }
+
+	// if (error) {
+	// 	return <div>Error loading data: {error}</div>;
+	// }
+
+	// if (!ganttData.length && !isLoading) {
+	// 	return <div>No project data to display.</div>;
+	// }
 
 	return (
 		<GanttComponent
 			id="gantt-chart"
 			height="400px"
 			width="1440px"
-			ref={(ganttChartRef: any) => (ganttRef.current = ganttChartRef)}
-			dataSource={projectData}
+			ref={(instance: GanttComponent | null) => {
+				ganttRef.current = instance;
+			}}
+			dataSource={ganttData}
+			resources={ganttResources}
 			taskFields={taskFields}
 			editSettings={editSettings}
 			toolbar={toolbarOptions}
@@ -165,8 +230,8 @@ const GanttChart = () => {
 			{...(projectEndDate !== undefined ? { projectEndDate } : {})}
 			labelSettings={labelSettings}
 			resourceFields={resourceFields}
-			resources={projectResources}
 			enableAdaptiveUI={true}
+			collapseAllParentTasks={true}
 			allowFiltering={true}
 			allowRowDragAndDrop={true}
 			enableUndoRedo={true}
@@ -174,15 +239,11 @@ const GanttChart = () => {
 			undoRedoStepsCount={20}
 			taskbarEditing={onTaskbarEditing}
 			durationUnit="Hour"
+			// expanding={handleExpanding}
+			enableVirtualization={true}
+			loadingIndicator={{ indicatorType: "Shimmer" }}
 		>
-			{/* <ColumnDirective field="ResourceId" headerText="ID" />
-			<ColumnDirective field="ResourceName" headerText="Resource Name" /> */}
-
-			<ColumnDirective
-				field="Resources"
-				headerText="Resources"
-				// template={template}
-			/>
+			<ColumnDirective field="Resources" headerText="Assigned Resources" />
 			<Inject
 				services={[
 					RowDD,

@@ -61,7 +61,7 @@ export const projectData: Task[] = [
 		Resources: [2, 3],
 		TaskName: "Project Planning",
 		StartDate: new Date("04/16/2024"),
-		EndDate: new Date("04/30/2024"),
+		// EndDate: new Date("04/30/2024"),
 		subtasks: [
 			{
 				TaskID: 9,
@@ -102,7 +102,7 @@ export const projectData: Task[] = [
 		Resources: [3, 4],
 		TaskName: "Project Execution",
 		StartDate: new Date("05/01/2024"),
-		EndDate: new Date("07/18/2024"),
+		// EndDate: new Date("07/18/2024"),
 		subtasks: [
 			{
 				TaskID: 14,
@@ -159,7 +159,7 @@ export const projectData: Task[] = [
 		Resources: [4, 1],
 		TaskName: "Project Completion",
 		StartDate: new Date("07/18/2024"),
-		EndDate: new Date("07/28/2024"),
+		// EndDate: new Date("07/28/2024"),
 		subtasks: [
 			{
 				TaskID: 21,
