@@ -1,19 +1,10 @@
 import {
 	GanttComponent,
 	Inject,
-	Edit,
-	Selection,
-	Toolbar,
-	Filter,
-	DayMarkers,
-	RowDD,
-	UndoRedo,
 	VirtualScroll,
-	type EditSettingsModel,
-	type LabelSettingsModel,
-	type ResourceFieldsModel,
 	ColumnDirective,
 	ColumnsDirective,
+	Selection,
 } from "@syncfusion/ej2-react-gantt";
 import "@syncfusion/ej2-base/styles/material.css";
 import "@syncfusion/ej2-buttons/styles/material.css";
@@ -29,142 +20,66 @@ import "@syncfusion/ej2-grids/styles/material.css";
 import "@syncfusion/ej2-treegrid/styles/material.css";
 import "@syncfusion/ej2-react-gantt/styles/material.css";
 import { registerLicense } from "@syncfusion/ej2-base";
-import { useEffect, useRef, useState } from "react";
-import { projectData, projectResources } from "../../data";
+import { useRef, useEffect } from "react";
+import { DataManager, WebApiAdaptor, Query } from "@syncfusion/ej2-data";
+import { CustomGanttAdaptor } from "./CustomGantAdapter";
+// import { registerServiceWorker } from "../../utils/registerServiceWorker";
+// import { transformApiResponse } from "../../utils/ganttDataMapper";
+
 export interface Task {
-	taskId: number;
+	taskId: string;
 	taskName: string;
 	startDate: Date;
 	endDate?: Date;
 	duration?: number;
 	progress?: number;
 	predecessor?: string;
-	parentID?: number | null;
+	parentID?: string | null;
 	isParent?: boolean;
 	IsExpanded?: boolean;
-}
-
-export interface Resource {
-	ResourceId: number;
-	ResourceName: string;
-	ResourceUnit?: string;
-	ResourceGroup?: string;
 }
 
 registerLicense(
 	"Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCeExzWmFZfVtgc19CY1ZRRmYuP1ZhSXxWdkBjX39ZdHFURGVYUUB9XUs="
 );
 
+const token =
+	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlY1RGxhZmhBVVZDLUpwWG1ST2p0NCJ9.eyIvcm9sZXMiOlsiZDE5ODliNDItMzM4Yy01NTI2LTliOTgtM2MyMzI4MTM3ODczIiwiZGVlNzU2MTEtODVjZC01ZTExLWEwMmEtZDNhMTA5MjdiZGJkIl0sIi9wZXJtaXNzaW9ucyI6WyI2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDBfQUNDT1VOVFMiLCJzYWZ3YXQuZmF0aGlAYm9jYS5wcm9fRU1BSUwiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50OmFjY291bnRzOmFsbDoiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50OmNsaWVudHM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6Y29tcGFuaWVzOmFsbDoiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50OmZpbGVzOmFsbDoiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50Omludm9pY2VzOmFsbDoiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50OnBheW1lbnRhZGRyZXNzZXM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6cGF5bWVudG1ldGhvZHM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6cGF5bWVudHM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6cHJvamVjdHM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6bWVzc2FnZXM6YWxsOiIsIndoZW46c2VsZjo2ODE4ZTA0Yi02ZWI0LWRhMTgtYTJiNS03ODZmMDAwMDAwMDA6Z3JhbnQ6dHJhY2tpbmdzOmFsbDoiLCJ3aGVuOnNlbGY6NjgxOGUwNGItNmViNC1kYTE4LWEyYjUtNzg2ZjAwMDAwMDAwOmdyYW50OnRpbWVjbG9ja2VudHJpZXM6YWxsOiJdLCJpc3MiOiJodHRwczovL2Rldi1hdXRoLmluY2x1ZGUuY29tLyIsInN1YiI6ImF1dGgwfDY4MThlMDRiNmViNGRhMThhMmI1Nzg2ZiIsImF1ZCI6WyJodHRwczovL2Rldi1wb3J0YWwtYXBpLmluY2x1ZGUuY29tIiwiaHR0cHM6Ly9kZXYtcnZqYS1uMXcudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTc0NzU3MDkwMiwiZXhwIjoxNzQ3NjU2OTAyLCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiYXpwIjoiaDJkMG9ubGY4NU5oTDJvckpGbkg2MG1oVTRhR2JtTmIiLCJwZXJtaXNzaW9ucyI6W119.Elr8CP4c5nwucMy85UgQwIR44bVPAag8yPaCnfI3MNPT3GAMFpguR20ugAlLxmg-PJMkKWPNoFUVZlteHMP6rPKfKNqdt_LitR3Dar43Lgkl-VTNk4MKLiWFK4S41zPvCHQYsAs8RN070S6ZNY4Vd5hmgwPGE7rkok28klEJp2IenY-qOU4OFR-s4IYzw24J75QRsJDyp9kHLvGEYovOH0zbOaVdrHje0L2kTeT9Id79fhXqkfFsGuhrSfC02ZeGrcY4hrk1OUSuDZbwThE3gYbgwJ0AbcL-vQdhByfKpuA94ugDCyZk9XTxWS0iV-H9w9wVZ8QCVVGq0dt-dNWuOQ";
+
 const GanttChartSandBox = () => {
-	const [projectStartDate] = useState<Date>(new Date("2024-03-25"));
-	const [projectEndDate, setProjectEndDate] = useState<Date | undefined>(
-		undefined
-	);
 	const ganttRef = useRef<GanttComponent | null>(null);
 
-	const [ganttData, setGanttData] = useState<Task[]>([]);
-	const [ganttResources, setGanttResources] = useState<Resource[]>([]);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
+	// const dataSourceLocal = fetch("http://localhost:3000/projects");
+	// console.log(
+	// 	"🚀 ~ :49 ~ GanttChartSandBox ~ dataSourceLocal:",
+	// 	dataSourceLocal
+	// );
 
-	useEffect(() => {
-		const fetchParentTasks = async () => {
-			setIsLoading(true);
-			setError(null);
-			try {
-				const projectsRes = await fetch("http://localhost:3000/projects");
-				if (!projectsRes.ok) {
-					throw new Error("Failed to fetch projects");
-				}
+	const dataSource = new DataManager({
+		url: "/projects",
+		// url: "https://services.syncfusion.com/react/production/api/GanttLoadOnDemand",
+		// adaptor: new WebApiAdaptor(),
+		adaptor: new CustomGanttAdaptor(),
+		crossDomain: true,
+		// enableCache: true,
+		// enablePersistence: true,
+		headers: [
+			{
+				Authorization: `Bearer ${token}`,
+			},
+		],
+		// cachingPageSize: 50,
+	});
 
-				const projects: Task[] = await projectsRes.json();
-				const processedProjects = projects.map(proj => ({
-					...proj,
-					startDate: new Date(proj.startDate),
-					endDate: proj.endDate ? new Date(proj.endDate) : undefined,
-					isParent: true,
-					ParentId: null,
-				}));
+	// const dataSource = new DataManager({
+	// 	url: "https://services.syncfusion.com/react/production/api/GanttLoadOnDemand",
+	// 	adaptor: new WebApiAdaptor(),
+	// 	crossDomain: true,
+	// });
 
-				setGanttData(processedProjects);
-			} catch (err) {
-				setError(
-					err instanceof Error ? err.message : "Failed to load projects"
-				);
-				console.error("Error fetching projects:", err);
-			} finally {
-				setIsLoading(false);
-			}
-		};
+	// Custom query to transform the data
+	// const query = new Query().addParams("transformResponse", "true");
 
-		fetchParentTasks();
-	}, []);
-
-	useEffect(() => {
-		if (ganttRef.current && ganttData.length > 0 && !isLoading) {
-			ganttRef.current.collapseAll();
-		}
-	}, [ganttData, isLoading]);
-
-	const onTaskbarEditing = (args: any) => {
-		const draggingEnd: Date = args.data.EndDate;
-		if (!projectEndDate || draggingEnd > projectEndDate) {
-			setProjectEndDate(draggingEnd);
-		}
-	};
-
-	const handleExpanding = async (args: any) => {
-		const record = args.data as Task;
-
-		try {
-			const subtasksRes = await fetch("http://localhost:3000/subtasks");
-			if (!subtasksRes.ok) {
-				throw new Error("Failed to fetch subtasks");
-			}
-
-			const allSubtasks: Task[] = await subtasksRes.json();
-			const taskSubtasks = allSubtasks
-				.filter(task => task.parentID === record.taskId)
-				.map(task => ({
-					...task,
-					startDate: new Date(task.startDate),
-					endDate: task.endDate ? new Date(task.endDate) : undefined,
-					isParent: false,
-					parentID: record.taskId,
-				}));
-
-			if (taskSubtasks.length > 0) {
-				setGanttData(prevData => [...prevData, ...taskSubtasks]);
-			}
-		} catch (err) {
-			console.error("Error loading subtasks:", err);
-		}
-	};
-
-	const labelSettings: LabelSettingsModel = {
-		rightLabel: "${Resources}",
-		taskLabel: "${taskData.TaskName}",
-	};
-
-	const resourceFields: ResourceFieldsModel = {
-		id: "ResourceId",
-		name: "ResourceName",
-		unit: "ResourceUnit",
-		group: "ResourceGroup",
-	};
-
-	// const taskFields = {
-	// 	id: "taskId",
-	// 	name: "taskName",
-	// 	startDate: "startDate",
-	// 	endDate: "endDate",
-	// 	duration: "duration",
-	// 	progress: "progress",
-	// 	dependency: "predecessor",
-	// 	parentID: "parentID",
-	// 	hasChildMapping: "isParent",
-	// 	expandState: "IsExpanded"
-	// };
 	const taskFields: any = {
 		id: "taskId",
 		name: "taskName",
@@ -178,139 +93,46 @@ const GanttChartSandBox = () => {
 		expandState: "IsExpanded",
 	};
 
-	const editSettings: EditSettingsModel = {
-		allowAdding: true,
-		allowEditing: true,
-		allowDeleting: true,
-		allowTaskbarEditing: true,
-		showDeleteConfirmDialog: true,
-		mode: "Auto",
-	};
+	const projectStartDate: Date = new Date("01/02/2020");
+	const projectEndDate: Date = new Date("12/01/2025");
 
-	const toolbarOptions: string[] = [
-		"Add",
-		"Edit",
-		"Update",
-		"Delete",
-		"Cancel",
-		"ExpandAll",
-		"CollapseAll",
-		"Search",
-		"Undo",
-		"Redo",
-		"ZoomIn",
-		"ZoomOut",
-		"ZoomToFit",
-	];
-
-	useEffect(() => {
-		if (ganttRef.current && projectEndDate) {
-			// Calculate time difference in milliseconds
-			const currentEndDate = ganttRef.current.projectEndDate as Date;
-			if (!currentEndDate) return;
-
-			const timeDiff = projectEndDate.getTime() - currentEndDate.getTime();
-
-			// One week in milliseconds
-			const oneWeek = 7 * 24 * 60 * 60 * 1000;
-			// One month in milliseconds (approximately)
-			const oneMonth = 30 * 24 * 60 * 60 * 1000;
-
-			let newEndDate = new Date(projectEndDate);
-
-			if (timeDiff >= oneMonth) {
-				// Add 2 months if difference is one month
-				newEndDate.setMonth(newEndDate.getMonth() + 2);
-			} else if (timeDiff >= oneWeek) {
-				// Add 2 weeks if difference is one week
-				newEndDate.setTime(newEndDate.getTime() + 2 * oneWeek);
-			}
-
-			if (
-				newEndDate.getTime() !==
-				(ganttRef.current.projectEndDate as Date)?.getTime()
-			) {
-				ganttRef.current.updateProjectDates(projectStartDate, newEndDate, true);
-			}
-		}
-	}, [projectEndDate, projectStartDate]);
+	// Custom adaptor to transform the response
+	// const customAdaptor = new WebApiAdaptor();
+	// customAdaptor.processResponse = (data: any) => {
+	// 	return {
+	// 		result: transformApiResponse(data),
+	// 		count: data.length,
+	// 	};
+	// };
 
 	return (
-		// <div className="control-pane">
-		// 	<div className="control-section">
-		// 		<GanttComponent
-		// 			id="gantt-chart"
-		// 			height="400px"
-		// 			width="1440px"
-		// 			ref={(instance: GanttComponent | null) => {
-		// 				ganttRef.current = instance;
-		// 			}}
-		// 			// treeColumnIndex={1}
-
-		// 			dataSource={ganttData}
-		// 			// resources={ganttResources}
-		// 			taskFields={taskFields}
-		// 			editSettings={editSettings}
-		// 			toolbar={toolbarOptions}
-		// 			projectStartDate={projectStartDate}
-		// 			{...(projectEndDate !== undefined ? { projectEndDate } : {})}
-		// 			labelSettings={labelSettings}
-		// 			resourceFields={resourceFields}
-		// 			enableAdaptiveUI={true}
-		// 			collapseAllParentTasks={true}
-		// 			allowFiltering={true}
-		// 			allowRowDragAndDrop={true}
-		// 			enableUndoRedo={true}
-		// 			undoRedoActions={[
-		// 				"Add",
-		// 				"Edit",
-		// 				"Delete",
-		// 				"RowDragAndDrop",
-		// 				"ZoomIn",
-		// 			]}
-		// 			undoRedoStepsCount={20}
-		// 			taskbarEditing={onTaskbarEditing}
-		// 			durationUnit="Hour"
-		// 			enableVirtualization={true}
-		// 			// loadChildOnDemand={true}
-		// 			expanding={handleExpanding}
-		// 			loadingIndicator={{ indicatorType: "Shimmer" }}
-		// 		>
-		// 			{/* <ColumnDirective field="Resources" headerText="Assigned Resources" /> */}
-		// 			<Inject
-		// 				services={[
-		// 					RowDD,
-		// 					Edit,
-		// 					Selection,
-		// 					Toolbar,
-		// 					Filter,
-		// 					DayMarkers,
-		// 					UndoRedo,
-		// 					VirtualScroll,
-		// 				]}
-		// 			/>
-		// 		</GanttComponent>
-		// 	</div>
-		// </div>
 		<GanttComponent
-			id="LoadOnDemand"
-			dataSource={ganttData}
-			// treeColumnIndex={1}
+			id="GanttChartSandBox"
+			ref={ganttRef}
+			dataSource={dataSource}
+			// dataSource={
+			// 	new DataManager({
+			// 		url: "http://localhost:3000/projects",
+			// 		adaptor: customAdaptor,
+			// 		crossDomain: true,
+			// 	})
+			// }
+			treeColumnIndex={0}
 			taskFields={taskFields}
 			enableVirtualization={true}
 			loadChildOnDemand={true}
 			height="460px"
 			projectStartDate={projectStartDate}
 			projectEndDate={projectEndDate}
-			expanding={handleExpanding}
 			loadingIndicator={{ indicatorType: "Shimmer" }}
-			collapseAllParentTasks={true}
+			allowSelection={true}
+			// query={query}
 		>
 			<ColumnsDirective>
 				<ColumnDirective field="taskId" width="80"></ColumnDirective>
 				<ColumnDirective
 					field="taskName"
-					headerText="Job Name"
+					headerText="Project Name"
 					width="250"
 					clipMode="EllipsisWithTooltip"
 				></ColumnDirective>
@@ -318,7 +140,7 @@ const GanttChartSandBox = () => {
 				<ColumnDirective field="duration"></ColumnDirective>
 				<ColumnDirective field="progress"></ColumnDirective>
 			</ColumnsDirective>
-			<Inject services={[Selection, VirtualScroll]} />
+			<Inject services={[VirtualScroll, Selection]} />
 		</GanttComponent>
 	);
 };
