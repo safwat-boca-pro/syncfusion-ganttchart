@@ -64,6 +64,9 @@ const parseUrlParams = url => {
 			case "$top":
 				params.top = parseInt(decodedValue);
 				break;
+			case "$skip":
+				params.skip = parseInt(decodedValue);
+				break;
 			default:
 				params[decodedKey] = decodedValue;
 		}
@@ -77,47 +80,164 @@ self.addEventListener("fetch", async event => {
 	const url = new URL(event.request.url);
 	const token = event.request.headers.get("Authorization");
 
-	const params = parseUrlParams(url);
-	console.log("URL Parameters:", params);
-
 	// TODO: get page, skip params from SyncFusion request and apply to URLs
 
-	const projectsURL =
-		"https://dev-portal-api.include.com/includego/tenants/425db690-a10b-4199-b3ef-980be43413df/companies/debf08b8-85c2-4a99-891b-f752caa574f7/projects?&page[number]=1&page[size]=10&sort=project_name_lowercase";
+	const projectsURL = (pageNumber = 1, pageSize = 20) =>
+		`https://dev-portal-api.include.com/includego/tenants/425db690-a10b-4199-b3ef-980be43413df/companies/debf08b8-85c2-4a99-891b-f752caa574f7/projects?&page[number]=${pageNumber}&page[size]=${pageSize}&sort=project_name_lowercase`;
 
-	const tasksURL = `https://dev-portal-api.include.com/includego/tenants/425db690-a10b-4199-b3ef-980be43413df/companies/debf08b8-85c2-4a99-891b-f752caa574f7/tasks?page[number]=1&page[size]=100&sort=target_start_date&filter%5Bprojects_ids%5D=${params.filter.value}`;
+	const tasksURL = projectId =>
+		`https://dev-portal-api.include.com/includego/tenants/425db690-a10b-4199-b3ef-980be43413df/companies/debf08b8-85c2-4a99-891b-f752caa574f7/tasks?page[number]=1&page[size]=100&sort=target_start_date&filter%5Bprojects_ids%5D=${projectId}`;
 
 	if (url.pathname.includes("/projects")) {
-		console.log("Service Worker: Intercepting projects API call");
+		const params = parseUrlParams(url);
 
-		// Parse and log URL parameters
+		let pageNumber = 1;
+		let pageSize = 20;
 
-		// Now you can use params.expand.action to know it's an expanding action
-		// params.expand.depth tells you how deep to expand
-		// params.filter.value gives you the project GUID to expand
+		if (params.top) {
+			pageSize = params.top;
+		}
+		if (params.skip !== undefined && params.top) {
+			pageNumber = Math.floor(params.skip / params.top) + 1;
+		} else if (params.skip !== undefined && !params.top) {
+			console.warn(
+				"Service Worker: $skip parameter found without $top. Defaulting to page 1."
+			);
+		}
 
 		event.respondWith(
-			fetch(projectsURL, {
+			fetch(projectsURL(pageNumber, pageSize), {
 				headers: {
 					Authorization: `Bearer ${token.split(" ")[1]}`,
 				},
 			})
 				.then(response => {
 					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`);
+						throw new Error(
+							`HTTP error! status: ${response.status} fetching projects`
+						);
 					}
-					return response.clone().json();
+					return response.json();
 				})
-				.then(data => {
-					return new Response(JSON.stringify(data), {
+				.then(projectsData => {
+					const allProjectsOriginal = projectsData.data;
+					const meta = projectsData.meta;
+
+					// Case 1: Collapsing a project
+					if (
+						params.expand?.action === "CollapsingAction" &&
+						params.filter?.field === "parentID"
+					) {
+						const collapsedProjectId = params.filter.value;
+						const updatedProjects = allProjectsOriginal.map(p => ({
+							...p,
+							attributes: {
+								...p.attributes,
+								IsExpanded:
+									p.id === collapsedProjectId
+										? false
+										: p.attributes?.IsExpanded || false,
+							},
+						}));
+						// For collapse, only return projects with the target project's IsExpanded state set to false.
+						// No tasks for the collapsed project are included.
+						const result = { data: updatedProjects, meta };
+						console.log("Collapsing result", result);
+						return new Response(JSON.stringify(result), {
+							headers: {
+								"Content-Type": "application/json",
+								"Access-Control-Allow-Origin": "*",
+							},
+						});
+					}
+					// Case 2: Expanding a project
+					else if (
+						params.expand?.action === "ExpandingAction" &&
+						params.filter?.field === "parentID"
+					) {
+						const parentProjectIdToExpand = params.filter.value;
+						return fetch(tasksURL(parentProjectIdToExpand), {
+							headers: { Authorization: `Bearer ${token.split(" ")[1]}` },
+						})
+							.then(response => {
+								if (!response.ok)
+									throw new Error(
+										`HTTP error! status: ${response.status} fetching tasks`
+									);
+								return response.json();
+							})
+							.then(tasksDataForParent => {
+								// tasksDataForParent.data contains tasks for the specific parent
+								const finalItems = [];
+								allProjectsOriginal.forEach(project => {
+									const isExpandingThisProject =
+										project.id === parentProjectIdToExpand;
+									const projectWithState = {
+										...project,
+										attributes: {
+											...project.attributes,
+											IsExpanded: isExpandingThisProject
+												? true
+												: project.attributes?.IsExpanded || false,
+										},
+									};
+									finalItems.push(projectWithState);
+
+									if (isExpandingThisProject && tasksDataForParent.data) {
+										finalItems.push(...tasksDataForParent.data);
+									}
+								});
+								const result = { data: finalItems, meta };
+								console.log("Expanding result", result);
+								return new Response(JSON.stringify(result), {
+									headers: {
+										"Content-Type": "application/json",
+										"Access-Control-Allow-Origin": "*",
+									},
+								});
+							})
+							.catch(error => {
+								console.error(
+									"Service Worker: Error fetching tasks for expand:",
+									error
+								);
+								return new Response(JSON.stringify({ error: error.message }), {
+									status: 500,
+									headers: {
+										"Content-Type": "application/json",
+										"Access-Control-Allow-Origin": "*",
+									},
+								});
+							});
+					}
+					// Case 3: Initial load or other actions (e.g. paging, sorting, no specific parent expand/collapse)
+					else {
+						const initialProjects = allProjectsOriginal.map(p => ({
+							...p,
+							attributes: {
+								...p.attributes,
+								IsExpanded: p.attributes?.IsExpanded || false, // Default to false if not specified
+							},
+						}));
+						const result = { data: initialProjects, meta };
+						console.log("Initial/other result", result);
+						return new Response(JSON.stringify(result), {
+							headers: {
+								"Content-Type": "application/json",
+								"Access-Control-Allow-Origin": "*",
+							},
+						});
+					}
+				})
+				.catch(error => {
+					console.error("Service Worker: Error fetching projects:", error);
+					return new Response(JSON.stringify({ error: error.message }), {
+						status: 500,
 						headers: {
 							"Content-Type": "application/json",
 							"Access-Control-Allow-Origin": "*",
 						},
 					});
-				})
-				.catch(error => {
-					console.error("Service Worker: Error fetching data:", error);
 				})
 		);
 	}

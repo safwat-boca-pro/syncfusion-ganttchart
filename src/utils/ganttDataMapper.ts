@@ -26,6 +26,7 @@ interface Project {
 				budget: number;
 			};
 		};
+		IsExpanded: boolean;
 	};
 	relationships?: {
 		projects?: {
@@ -44,6 +45,7 @@ interface Task {
 		parent_tasks_id: string | null;
 		workflow_state: number;
 		budget_hours_total: number;
+		IsExpanded: boolean;
 	};
 	relationships?: {
 		projects?: {
@@ -83,9 +85,13 @@ export const mapDataToGanttTasks = (data: (Project | Task)[]): GanttTask[] => {
 				startDate: new Date(project.attributes.start_date_target),
 				endDate: new Date(project.attributes.end_date_target),
 				progress: calculateProgress(project.attributes.workflow_state),
-				parentID: project.attributes.parent_projects_id,
-				isParent: project.relationships?.projects?.data.length ? true : false,
-				IsExpanded: true,
+				parentID: null,
+				isParent: true,
+				// Use IsExpanded from attributes if present, otherwise default to false
+				IsExpanded:
+					project.attributes.IsExpanded !== undefined
+						? project.attributes.IsExpanded
+						: false,
 			});
 		} else if (item.type === "tasks") {
 			const task = item as Task;
@@ -99,14 +105,15 @@ export const mapDataToGanttTasks = (data: (Project | Task)[]): GanttTask[] => {
 					? new Date(task.attributes.target_end_date)
 					: undefined,
 				progress: calculateProgress(task.attributes.workflow_state),
-				parentID: task.attributes.parent_tasks_id,
+				parentID: task.relationships?.projects?.data[0]?.id,
 				// For tasks, we might need to determine if it has subtasks from the relationships
 				isParent: false, // This could be updated based on your data structure
-				IsExpanded: true,
+				IsExpanded: false,
 			});
 		}
 	});
 
+	console.log("🚀 ~ :110 ~ ganttTasks:", ganttTasks);
 	return ganttTasks;
 };
 

@@ -5,6 +5,7 @@ import {
 	ColumnDirective,
 	ColumnsDirective,
 	Selection,
+	type TaskFieldsModel,
 } from "@syncfusion/ej2-react-gantt";
 import "@syncfusion/ej2-base/styles/material.css";
 import "@syncfusion/ej2-buttons/styles/material.css";
@@ -80,7 +81,7 @@ const GanttChartSandBox = () => {
 	// Custom query to transform the data
 	// const query = new Query().addParams("transformResponse", "true");
 
-	const taskFields: any = {
+	const taskFields: TaskFieldsModel = {
 		id: "taskId",
 		name: "taskName",
 		startDate: "startDate",
@@ -110,18 +111,12 @@ const GanttChartSandBox = () => {
 			id="GanttChartSandBox"
 			ref={ganttRef}
 			dataSource={dataSource}
-			// dataSource={
-			// 	new DataManager({
-			// 		url: "http://localhost:3000/projects",
-			// 		adaptor: customAdaptor,
-			// 		crossDomain: true,
-			// 	})
-			// }
 			treeColumnIndex={0}
 			taskFields={taskFields}
 			enableVirtualization={true}
 			loadChildOnDemand={true}
-			height="460px"
+			height="600px"
+			width="100%"
 			projectStartDate={projectStartDate}
 			projectEndDate={projectEndDate}
 			loadingIndicator={{ indicatorType: "Shimmer" }}
@@ -129,11 +124,11 @@ const GanttChartSandBox = () => {
 			// query={query}
 		>
 			<ColumnsDirective>
-				<ColumnDirective field="taskId" width="80"></ColumnDirective>
+				<ColumnDirective field="taskId" width="180"></ColumnDirective>
 				<ColumnDirective
 					field="taskName"
 					headerText="Project Name"
-					width="250"
+					width="200"
 					clipMode="EllipsisWithTooltip"
 				></ColumnDirective>
 				<ColumnDirective field="startDate"></ColumnDirective>

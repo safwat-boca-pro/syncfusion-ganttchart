@@ -216,8 +216,8 @@ const GanttChart = () => {
 	return (
 		<GanttComponent
 			id="gantt-chart"
-			height="400px"
-			width="1440px"
+			height="600px"
+			width="100%"
 			ref={(instance: GanttComponent | null) => {
 				ganttRef.current = instance;
 			}}
