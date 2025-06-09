@@ -5,6 +5,7 @@ import {
 	ColumnsDirective,
 	ColumnDirective,
 	VirtualScroll,
+	Edit,
 } from "@syncfusion/ej2-react-gantt";
 import { DataManager, WebApiAdaptor } from "@syncfusion/ej2-data";
 import { registerLicense } from "@syncfusion/ej2-base";
@@ -46,7 +47,7 @@ const LoadOnDemand = () => {
 	};
 
 	const projectStartDate: Date = new Date("01/02/2000");
-	const projectEndDate: Date = new Date("12/01/2002");
+	const projectEndDate: Date = new Date("12/01/2020");
 	return (
 		<GanttComponent
 			id="LoadOnDemand"
@@ -54,10 +55,17 @@ const LoadOnDemand = () => {
 			treeColumnIndex={1}
 			taskFields={taskFields}
 			enableVirtualization={true}
+			enableTimelineVirtualization={true}
 			loadChildOnDemand={true}
-			height="460px"
+			height="560px"
+			width="100%"
 			projectStartDate={projectStartDate}
 			projectEndDate={projectEndDate}
+			editSettings={{
+				allowEditing: true,
+				allowDeleting: false,
+				allowAdding: false,
+			}}
 		>
 			<ColumnsDirective>
 				<ColumnDirective field="taskId" width="80"></ColumnDirective>
@@ -71,7 +79,7 @@ const LoadOnDemand = () => {
 				<ColumnDirective field="duration"></ColumnDirective>
 				<ColumnDirective field="progress"></ColumnDirective>
 			</ColumnsDirective>
-			<Inject services={[Selection, VirtualScroll]} />
+			<Inject services={[Selection, VirtualScroll, Edit]} />
 		</GanttComponent>
 	);
 };
